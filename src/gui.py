@@ -3,17 +3,17 @@ import tempfile
 import shutil
 import os
 import json
+from resources import LIST_FORMATS, TARGET_LANGUAGES_LIST
 
 
 def main():
     with st.container():
         st.title('Spanish video dubbing')
-
     # Cargar un archivo de video
     uploaded_video = st.file_uploader(
         "Arrastra y suelta videos aquí o haz clic para seleccionarlos",
         # accept_multiple_files="directory",
-        type=["mp4", "avi", "mkv", "mov", "webm", "webp"],
+        type=LIST_FORMATS,
     )
     
     if uploaded_video is not None:
@@ -22,16 +22,36 @@ def main():
             with open(tmp_original_video_path, "wb") as tmp_file:
                 tmp_file.write(uploaded_video.read())
         # Guardar el archivo cargado en session_state si no está ya almacenado
-
         st.write(f"✅ Video cargado: {uploaded_video.name}")
-
-        st.write(f"Dispositivo seleccionado: {DEVICE}")
-            
+        format_video = uploaded_video.name.split('.')[-1].lower()
+        index = LIST_FORMATS.index(format_video)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            output_format = st.selectbox(
+                "Selecciona el formato de salida",
+                options=LIST_FORMATS,
+                index= index
+            )
+        with col2:
+            output_language = st.selectbox(
+                "Selecciona el idioma de salida",
+                options=TARGET_LANGUAGES_LIST,
+                index=0
+            )
+        with col3:
+            gender_option = st.selectbox(
+                "Selecciona el género de la voz",
+                options=["Auto", "Male", "Female"],
+                index=0,
+                help="Si la voz es muy ambigua, se recomienda seleccionar seleccionar el género manualmente."
+            )
+        
         # Extraer audio y convertir a texto al hacer clic en un botón
         if st.button("Procesar video"):
             st.write("Extrayendo audio...")
             # Extraer audio y video
-            audio_file, video_file = extract_audio_video(tmp_original_video_path)
+            audio_file, video_file = extract_audio_video(tmp_original_video_path, output_format)
             st.audio(audio_file, format='audio/wav')
             st.write(f"Audio extraído: {audio_file}")
             # Separate voice and background
@@ -45,7 +65,7 @@ def main():
             logs= split_silence(tmp_dir, voice_file_path, total_video_duration)
             # speech recognition
             st.write("Convirtiendo audio a texto...")
-            texts = speech_recognition(logs)
+            texts, gender = speech_recognition(logs, gender_option)
             # download texts
             st.write("Descargando textos...")
             st.download_button(
@@ -64,7 +84,7 @@ def main():
             )
             # Translate
             st.write("Traduciendo...")
-            translated_texts, audio_durations, translate_segments_path = translate(tmp_dir, texts)
+            translated_texts, audio_durations, translate_segments_path = translate(tmp_dir, texts, output_language, gender)
             st.download_button(
                 label="Descargar text translation como JSON",
                 data=json.dumps(translated_texts, ensure_ascii=False, indent=2),
@@ -77,7 +97,7 @@ def main():
             joined_audio = join_audios(translate_segments_path, audio_durations, logs)
             # Combinar audio y video
             st.write("Combinando audio y video...")
-            output_file, output_file_name = combine_audio_and_video(video_file, joined_audio, background_file, tmp_original_video_path)
+            output_file, output_file_name = combine_audio_and_video(video_file, joined_audio, background_file, tmp_original_video_path, output_format)
 
             # Abrir el archivo en modo binario
             with open(output_file, "rb") as f:
@@ -88,7 +108,7 @@ def main():
                 label="Descargar video traducido",
                 data=contenido,
                 file_name= output_file_name,
-                mime="video/webm",  # Tipo MIME apropiado
+                mime=f"video/{output_format}",  # Tipo MIME apropiado
                 on_click= "ignore"
             )
             
@@ -112,5 +132,4 @@ if __name__ == '__main__':
     from tools.combining import combine_audio_and_video
     from tools.split_silence import split_silence
     from tools.join_audios import join_audios
-    from resources import DEVICE
     main()

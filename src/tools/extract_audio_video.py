@@ -1,7 +1,9 @@
 import subprocess
 from pathlib import Path
+from resources import VIDEO_CODEC_PARAMS
 
-def extract_audio_video(video_file_path):
+
+def extract_audio_video(video_file_path, output_format):
     """
     Extrae el audio de un archivo de video y lo guarda en un archivo separado.
 
@@ -15,16 +17,15 @@ def extract_audio_video(video_file_path):
 
     # Rutas de salida
     audio_output_path = video_path.with_suffix(".wav")
-    video_output_path = video_path.with_name(f"{video_path.stem}_noaudio.webm")
+    video_output_path = video_path.with_name(f"{video_path.stem}_noaudio.{output_format}")
     
     # Determinar si necesitamos recodificar basado en la extensión
     input_ext = video_path.suffix.lower()
-    if input_ext == ".webm":
-        # Si ya es webm, solo copiar el stream de video
+    if input_ext == f".{output_format}":
         video_codec_params = ["-c:v", "copy"]
     else:
-        # Si es otro formato (mp4, avi, etc.), convertir a VP9
-        video_codec_params = ["-c:v", "libvpx-vp9", "-crf", "30", "-b:v", "0"]
+        # Si es otro formato (mp4, avi, etc.), convertir a output_format
+        video_codec_params = VIDEO_CODEC_PARAMS.get(output_format)
 
     try:
         cmd = [

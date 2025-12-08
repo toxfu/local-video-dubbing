@@ -33,10 +33,8 @@ def audio_segment_silence(
         silence_thresh
     )
     durations = [(end - start) for start, end in segments]
-    
     all_segments = []
     re_segments = []
-    
     for i, (start, end) in enumerate(segments):
         if durations[i] < max_segment_duration:
             all_segments.append((start_in + start, start_in + end))
@@ -52,7 +50,6 @@ def audio_segment_silence(
                 silence_thresh,
                 start_in + start
             )
-
     return all_segments
 
 

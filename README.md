@@ -1,6 +1,6 @@
 # 🎬 Local Video Dubbing
 
-Sistema automatizado de doblaje de videos usando IA que traduce y sincroniza el audio de videos en inglés al español, manteniendo el audio de fondo original.
+Sistema automatizado de doblaje de videos usando IA que traduce y sincroniza el audio de videos. Sólo acepta un locutor por video.
 
 | Video Original | Video Doblado |
 |----------------|---------------|
@@ -40,6 +40,15 @@ docker compose build
 docker compose up
 ```
 
+## 🔩 Ajustes opcionales
+
+Si necesitas subir archivos más grandes, ajusta los siguientes parámetros en `.streamlit/config.toml`:
+
+```toml
+[server]
+maxUploadSize = 1024  # en megas → 1 GB
+```
+
 ## 💻 Uso
 
 ### Interfaz gráfica (Streamlit)
@@ -71,19 +80,10 @@ Luego abre tu navegador en `http://localhost:8501` y:
 - Doblaje de contenido educativo
 - Traducción de tutoriales en video
 - Localización de presentaciones
-- Accesibilidad para hablantes de español
-- Creación de contenido multilingüe
 
 ## 📝 Licencia
 
 Este proyecto está bajo la licencia especificada en el archivo `LICENCE`.
-
-## 💡 Notas técnicas
-
-- El modelo de separación de audio requiere audio a 44.1 kHz
-- El procesamiento en GPU es significativamente más rápido
-- Los videos largos pueden requerir bastante memoria RAM/VRAM
-- FFmpeg debe estar instalado y accesible en el PATH del sistema
 
 ## 📧 Contacto
 
