@@ -7,17 +7,21 @@ services:
     ports:
       - "8501:8501"
     volumes:
-      # Monta el código fuente para desarrollo en caliente (comentar en producción)
-      - ./src:/app/src
       # Directorio para archivos de entrada/salida
       - ./data:/app/data
+      # Importante: Persistencia para modelos de IA (evita re-descargas)
+      - hf_cache:/root/.cache/huggingface
+      - kokoro_cache:/root/.cache/kokoro
+      - torch_cache:/root/.cache/torch
     environment:
       # Configura variables de entorno aquí o usa un archivo .env
       - STREAMLIT_SERVER_PORT=8501
       - STREAMLIT_SERVER_ADDRESS=0.0.0.0
       - STREAMLIT_SERVER_HEADLESS=true
       - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-      # Agrega aquí las variables de secrets.toml como variables de entorno
+      # Importante: Forzar a las librerías a usar las rutas de los volúmenes
+      - HF_HOME=/root/.cache/huggingface
+      - TORCH_HOME=/root/.cache/torch
     restart: unless-stopped
     # acceso a GPU para PyTorch
     deploy:
@@ -27,3 +31,8 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+volumes:
+  hf_cache:      # Volumen para Transformers
+  kokoro_cache:  # Volumen para Kokoro TTS
+  torch_cache:   # Volumen para PyTorch
